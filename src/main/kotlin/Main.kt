@@ -133,21 +133,26 @@ object Service {
 
     fun getListMessageQuantityMessages(idChatSearch: Int, idLastMessage: Int, count: Int): List<Message>? {
         if (idLastMessage > uniqueIdMessage || idChatSearch > uniqueChat
-            || listAllMessages[idLastMessage].idChat != idChatSearch
         ) {
             return null
         }
-        val idStop: Int = if ((idLastMessage + count) >
+        /*val idStop: Int = if ((idLastMessage + count) >
             listAllChats[idChatSearch].listMessage[listAllChats[idChatSearch].listMessage.size - 1].idMessage
         )
             (listAllChats[idChatSearch].listMessage[listAllChats[idChatSearch].listMessage.size - 1].idMessage)
-        else (idLastMessage + count)
-        val listMessage =
+        else (idLastMessage + count)*/
+
+        val result = listAllMessages
+            .filter { it.idChat == idChatSearch && it.idMessage >= idLastMessage } //Оставить только те сообщения, у которых совпадает id чата и их собственный id превышает требуемый
+            .take(count) //Возьми только нужное количество, или столько сколько получится, если не хватит
+            .onEach { it.unReadMessage = false } //для каждого установи unReadMessage в положение false
+
+        /*val listMessage =
             listAllChats[idChatSearch].listMessage.filter { it.idMessage >= idLastMessage && it.aliveMessage }
         for (i in idLastMessage..idStop) {
             listAllMessages[i].unReadMessage = false
-        }
-        return listMessage
+        }*/
+        return result
     }
 
     fun getLastMessages(): String {
