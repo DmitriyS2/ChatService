@@ -47,7 +47,8 @@ class ServiceTest {
         Service.createMessage(2, 1, "Hello!")
         Service.createMessage(3, 1, "Bye!")
         val res = Service.getChats(1)
-        val list1: List<Chat> = listAllChats.filter { (it.idFirstUser == 1 || it.idSecondUser == 1) && it.aliveChat }
+        val list1: List<Chat> =
+            Service.listAllChats.filter { (it.idFirstUser == 1 || it.idSecondUser == 1) && it.aliveChat }
         assertEquals(list1, res)
     }
 
@@ -61,7 +62,7 @@ class ServiceTest {
     fun getMeListMessageIdChat() {
         Service.createMessage(1, 2, "Hello!")
         val res = Service.getListMessageIdChat(0)
-        val list1 = listAllChats[0].listMessage
+        val list1 = Service.listAllChats[0].listMessage
         assertEquals(list1, res)
     }
 
@@ -69,22 +70,21 @@ class ServiceTest {
     fun getMeListMessageIdMessage() {
         Service.createMessage(1, 2, "Hello!")
         val res = Service.getListMessageIdMessage(0)
-        val list1 = listOf(listAllMessages[0])
+        val list1 = listOf(Service.listAllMessages[0])
         assertEquals(list1, res)
     }
 
     @Test
     fun getMeListMessageQuantityMessagesWoSms() {
-        val res = Service.getListMessageQuantityMessages(10)
-        val list1: List<Message> = emptyList()
-        assertEquals(list1, res)
+        val res = Service.getListMessageQuantityMessages(10, 10, 5)
+        assertNull(res)
     }
 
     @Test
     fun getMeListMessageQuantityMessagesWithSms() {
         Service.createMessage(1, 2, "Hello!")
-        val res = Service.getListMessageQuantityMessages(10)
-        val list1: List<Message> = listOf(listAllMessages[0])
+        val res = Service.getListMessageQuantityMessages(0, 0, 5)
+        val list1: List<Message> = listOf(Service.listAllMessages[0])
         assertEquals(list1, res)
     }
 

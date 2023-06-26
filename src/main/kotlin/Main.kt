@@ -1,3 +1,5 @@
+import Service.uniqueChat
+import Service.uniqueIdMessage
 import java.lang.IndexOutOfBoundsException
 
 data class Message(
@@ -22,13 +24,14 @@ data class Chat(
     val listMessage: MutableList<Message> = mutableListOf()
 )
 
-var listAllMessages: MutableList<Message> = mutableListOf()
-var listAllChats: MutableList<Chat> = mutableListOf()
-
-var uniqueIdMessage = -1
-var uniqueChat = -1
 
 object Service {
+
+    var listAllMessages: MutableList<Message> = mutableListOf()
+    var listAllChats: MutableList<Chat> = mutableListOf()
+
+    var uniqueIdMessage = -1
+    var uniqueChat = -1
 
     fun clear() {
         listAllMessages = mutableListOf()
@@ -128,10 +131,20 @@ object Service {
         return listAllMessages.filter { it.idMessage >= messageId && it.aliveMessage }
     }
 
-    fun getListMessageQuantityMessages(count: Int): List<Message> {
-        val idStart: Int = if ((uniqueIdMessage - count) > 0) (uniqueIdMessage - count) else 0
-        val listMessage = listAllMessages.filter { it.idMessage >= idStart && it.aliveMessage }
-        for (i in idStart..uniqueIdMessage) {
+    fun getListMessageQuantityMessages(idChatSearch: Int, idLastMessage: Int, count: Int): List<Message>? {
+        if (idLastMessage > uniqueIdMessage || idChatSearch > uniqueChat
+            || listAllMessages[idLastMessage].idChat != idChatSearch
+        ) {
+            return null
+        }
+        val idStop: Int = if ((idLastMessage + count) >
+            listAllChats[idChatSearch].listMessage[listAllChats[idChatSearch].listMessage.size - 1].idMessage
+        )
+            (listAllChats[idChatSearch].listMessage[listAllChats[idChatSearch].listMessage.size - 1].idMessage)
+        else (idLastMessage + count)
+        val listMessage =
+            listAllChats[idChatSearch].listMessage.filter { it.idMessage >= idLastMessage && it.aliveMessage }
+        for (i in idLastMessage..idStop) {
             listAllMessages[i].unReadMessage = false
         }
         return listMessage
@@ -155,7 +168,7 @@ fun main(args: Array<String>) {
     val chat = Service.getChats(1)
     println(mes)
     println(chat)
-    println(listAllMessages)
+    println(Service.listAllMessages)
     println(res)
     println()
     Service.createMessage(1, 2, "Bye")
@@ -163,8 +176,8 @@ fun main(args: Array<String>) {
     val chat2 = Service.getChats(1)
     println(mes2)
     println(chat2)
-    println(listAllMessages)
-    println(listAllChats)
+    println(Service.listAllMessages)
+    println(Service.listAllChats)
     println(uniqueIdMessage)
     println(uniqueChat)
     println()
@@ -173,14 +186,14 @@ fun main(args: Array<String>) {
     val chat3 = Service.getChats(1)
     println(mes3)
     println(chat3)
-    println(listAllMessages)
-    println(listAllChats)
+    println(Service.listAllMessages)
+    println(Service.listAllChats)
     println()
 
     println(Service.getUnReadChatsCount(1))
     println(Service.getUnReadChatsCount(2))
     println(Service.getLastMessages())
-    println(Service.getListMessageQuantityMessages(1))
+    println(Service.getListMessageQuantityMessages(1, 1, 5))
     println(Service.getListMessageIdChat(0))
     println()
 
@@ -189,7 +202,7 @@ fun main(args: Array<String>) {
     println()
 
     Service.deleteMessage(0)
-    println(Service.getListMessageQuantityMessages(0))
+    println(Service.getListMessageQuantityMessages(0, 1, 5))
     println(Service.getChats(1))
     println(Service.getListMessageIdChat(1))
 }
