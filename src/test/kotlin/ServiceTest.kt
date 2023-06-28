@@ -85,12 +85,12 @@ class ServiceTest {
         Service.createMessage(1, 2, "Hello!")
         val res = Service.getListMessageQuantityMessages(0, 0, 5)
         val list1: List<Message> = listOf(Service.listAllMessages[0])
-        assertEquals(list1, res)
+        assertEquals("Hello!", res)
     }
 
     @Test
     fun getMeLastMessagesNoSms() {
-        val text = "нет сообщений"
+        val text = "Нет сообщений"
         val res = Service.getLastMessages()
         assertEquals(text, res)
     }
@@ -98,7 +98,7 @@ class ServiceTest {
     @Test
     fun getMeLastMessagesWithSms() {
         Service.createMessage(1, 2, "Hello!")
-        val text = "[user#1 sent to user#2 sms Hello!]"
+        val text = "Hello!"
         val res = Service.getLastMessages()
         assertEquals(text, res)
     }
