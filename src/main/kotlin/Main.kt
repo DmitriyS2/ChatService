@@ -11,9 +11,9 @@ data class Message(
     var idSender: Int = 0,
     var idChat: Int = 0
 ) {
-    override fun toString(): String {
+    /*override fun toString(): String {
         return "user#$idSender sent to user#$idRecipient sms $text"
-    }
+    }*/
 }
 
 data class Chat(
@@ -81,7 +81,9 @@ object Service {
     }
 
     private fun checkAliveChat(idChatForCheck: Int) {
-        val listAliveMessage = listAllChats[idChatForCheck].listMessage.filter { it.aliveMessage }
+        val listAliveMessage = listAllChats[idChatForCheck].listMessage
+            .filter { it.aliveMessage }
+
         if (listAliveMessage.isEmpty()) {
             listAllChats[idChatForCheck].aliveChat = false
         }
@@ -89,9 +91,10 @@ object Service {
 
     fun deleteChat(idChatForDelete: Int): Boolean {
         if (idChatForDelete in 0..uniqueChat) {
-            for (i in 0 until listAllChats[idChatForDelete].listMessage.size) {
-                listAllChats[idChatForDelete].listMessage[i].aliveMessage = false
-            }
+            val result = listAllMessages.asSequence()
+                .filter { it.idChat == idChatForDelete }
+                .onEach { it.aliveMessage = false }
+
             listAllChats[idChatForDelete].aliveChat = false
             return true
         }
@@ -99,23 +102,23 @@ object Service {
     }
 
     fun getUnReadChatsCount(idUser: Int): Int {
-        val listMessageThisUserRecipient = listAllMessages.filter {
-            it.idRecipient == idUser
-                    && it.unReadMessage && it.aliveMessage
-        }
-        val setChats: HashSet<Chat> = HashSet()
-        if (listMessageThisUserRecipient.isNotEmpty()) {
-            for (element in listMessageThisUserRecipient) {
-                setChats.add(listAllChats[element.idChat])
-            }
-            return setChats.size
-        }
+        val setChats: HashSet<Int> = HashSet()
 
-        return -1
+        listAllMessages
+            .filter { it.idRecipient == idUser && it.unReadMessage && it.aliveMessage }
+            .map { it.idChat }
+            .onEach { setChats.add(it) }
+
+        return setChats.size
     }
 
+
     fun getChats(idUser: Int): List<Chat> {
-        return listAllChats.filter { (it.idFirstUser == idUser || it.idSecondUser == idUser) && it.aliveChat }
+        return listAllChats
+            .filter {
+                (it.idFirstUser == idUser || it.idSecondUser == idUser)
+                        && it.aliveChat
+            }
     }
 
     fun getListMessageIdChat(chatId: Int): MutableList<Message>? {
@@ -128,11 +131,12 @@ object Service {
     }
 
     fun getListMessageIdMessage(messageId: Int): List<Message> {
-        return listAllMessages.filter { it.idMessage >= messageId && it.aliveMessage }
+        return listAllMessages
+            .filter { it.idMessage >= messageId && it.aliveMessage }
     }
 
-    fun getListMessageQuantityMessages(idChatSearch: Int, idLastMessage: Int, count: Int): List<Message>? {
-        if (idLastMessage > uniqueIdMessage || idChatSearch > uniqueChat
+    fun getListMessageQuantityMessages(idChatSearch: Int, idLastMessage: Int, count: Int): String? {
+        if (idLastMessage < 0 || idLastMessage > uniqueIdMessage || idChatSearch < 0 || idChatSearch > uniqueChat
         ) {
             return null
         }
@@ -142,10 +146,11 @@ object Service {
             (listAllChats[idChatSearch].listMessage[listAllChats[idChatSearch].listMessage.size - 1].idMessage)
         else (idLastMessage + count)*/
 
-        val result = listAllMessages
+        val result = listAllMessages.asSequence()
             .filter { it.idChat == idChatSearch && it.idMessage >= idLastMessage } //Оставить только те сообщения, у которых совпадает id чата и их собственный id превышает требуемый
             .take(count) //Возьми только нужное количество, или столько сколько получится, если не хватит
             .onEach { it.unReadMessage = false } //для каждого установи unReadMessage в положение false
+            .joinToString(separator = "\n") { it.text } // вернуть текст сообщений
 
         /*val listMessage =
             listAllChats[idChatSearch].listMessage.filter { it.idMessage >= idLastMessage && it.aliveMessage }
@@ -156,18 +161,25 @@ object Service {
     }
 
     fun getLastMessages(): String {
-        val listLastMessages: MutableList<Message> = mutableListOf()
-        for (item in listAllChats) {
+        val noMessages: String = "Нет сообщений"
+        val result = listAllChats.asSequence()
+            .filter { it.listMessage[it.listMessage.size - 1].aliveMessage }
+            .joinToString(separator = "\n") { it.listMessage[it.listMessage.size - 1].text }
+            .ifEmpty { noMessages }
+        //.let { Chat(idChat = -1, listMessage.add(Message(-1,text = noMessages))) }
+        return result
+        /*for (item in listAllChats) {
             if (item.listMessage[item.listMessage.size - 1].aliveMessage) {
                 listLastMessages.add(item.listMessage[item.listMessage.size - 1])
             }
         }
-        return if (listLastMessages.isNotEmpty()) listLastMessages.toString() else "нет сообщений"
+        return if (listLastMessages.isNotEmpty()) listLastMessages.toString() else "нет сообщений"*/
     }
 }
 
 
 fun main(args: Array<String>) {
+    println(Service.getLastMessages())
     val res = Service.createMessage(1, 2, "Hello")
     val mes = Service.getListMessageIdMessage(0)
     val chat = Service.getChats(1)
